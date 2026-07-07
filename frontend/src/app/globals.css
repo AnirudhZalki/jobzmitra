@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FFFDF8;
+  --foreground: #1F2937;
+  
+  --color-terracotta: #C96A3D;
+  --color-warm-sand: #F4E6D4;
+  --color-forest-green: #234E3F;
+  --color-cream-white: #FFFDF8;
+  --color-dark-slate: #1F2937;
+  
+  --color-success: #2E8B57;
+  --color-warning: #D97706;
+  --color-error: #DC2626;
+  --color-highlight: #E9B44C;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-terracotta: var(--color-terracotta);
+  --color-warm-sand: var(--color-warm-sand);
+  --color-forest-green: var(--color-forest-green);
+  --color-cream-white: var(--color-cream-white);
+  --color-dark-slate: var(--color-dark-slate);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-highlight: var(--color-highlight);
+  
+  --font-headings: var(--font-playfair);
+  --font-body: var(--font-inter);
+  --font-buttons: var(--font-poppins);
+  --font-sans: var(--font-inter);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1F2937;
+    --foreground: #FFFDF8;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+}
+
+/* Custom Scrollbar for Sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-terracotta);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  opacity: 1;
+}
+
+/* Safe area for mobile bottom nav (notched phones) */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@keyframes fade-in-down {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+.animate-fade-in-down {
+  animation: fade-in-down 0.3s ease-out forwards;
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

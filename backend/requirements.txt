@@ -1,0 +1,11 @@
+fastapi[standard]
+sqlalchemy
+alembic
+pydantic[email]
+pydantic-settings
+PyPDF2
+python-multipart
+passlib[bcrypt]
+PyJWT
+psycopg2-binary
+cloudinary
