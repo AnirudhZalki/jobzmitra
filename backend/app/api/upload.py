@@ -38,7 +38,7 @@ EXT_MAP = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
 }
 
-@router.post("/")
+@router.post("")
 async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=400, detail="File type not allowed")

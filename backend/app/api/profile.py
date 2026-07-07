@@ -77,7 +77,12 @@ def get_my_posts(db: Session = Depends(get_db), current_user: User = Depends(get
             "created_at": p.created_at,
             "like_count": len(p.likes),
             "comment_count": len(p.comments),
-            "media_attachments": p.media_attachments
+            "media_attachments": p.media_attachments,
+            "author": {
+                "id": current_user.id,
+                "full_name": current_user.full_name,
+                "avatar_url": current_user.avatar_url
+            }
         }
         for p in posts
     ]

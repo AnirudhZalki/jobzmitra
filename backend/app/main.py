@@ -5,6 +5,10 @@ import os
 from app.api import auth, feed, jobs, profile, upload, recruiter, gamification, mentor, messages, connections, reels, search, notifications
 # Import all models so SQLAlchemy mapper can resolve relationships
 from app.models import user, reel, post, job, message, notification  # noqa: F401
+from app.db.database import engine, Base
+
+# Create tables if they don't exist
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="JobzMitra API",

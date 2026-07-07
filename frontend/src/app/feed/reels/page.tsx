@@ -42,7 +42,7 @@ export default function ReelsPage() {
   const [newComment, setNewComment] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [localLiked, setLocalLiked] = useState<Record<number, boolean>>({});
-  const isLikingRef = useRef<Record<number, boolean>>({});
+  const [isLiking, setIsLiking] = useState<Record<number, boolean>>({});
 
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -51,7 +51,7 @@ export default function ReelsPage() {
 
   const fetchReels = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/reels/");
+      const res = await fetch("/api/reels");
       if (res.ok) {
         const data = await res.json();
         setReels(data);
@@ -107,31 +107,32 @@ export default function ReelsPage() {
   }, [reels]);
 
   const handleLike = async (reelId: number, index: number) => {
-    if (isLiking[reelId] || localLiked[reelId]) return; // Prevent double-tap or unliking!
+    if (isLiking[reelId]) return;
     
     setIsLiking(prev => ({ ...prev, [reelId]: true }));
     
-    // Optimistic UI update: ONLY +1
+    const willLike = !localLiked[reelId];
+    
+    // Optimistic UI update
     setReels(prevReels => {
       const newReels = [...prevReels];
+      const count = newReels[index].likes_count || 0;
       newReels[index] = { 
         ...newReels[index], 
-        likes_count: (newReels[index].likes_count || 0) + 1 
+        likes_count: willLike ? count + 1 : Math.max(0, count - 1)
       };
       return newReels;
     });
     
-    const updateLocalLiked = (prev: Record<number, boolean>) => {
-      const next = { ...prev, [reelId]: true };
+    setLocalLiked(prev => {
+      const next = { ...prev, [reelId]: willLike };
       localStorage.setItem("jobzmitra_liked_reels", JSON.stringify(next));
       return next;
-    };
-    
-    setLocalLiked(updateLocalLiked);
+    });
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8000/api/reels/${reelId}/like`, {
+      const res = await fetch(`/api/reels/${reelId}/like`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -143,21 +144,24 @@ export default function ReelsPage() {
           newReels[index] = { ...newReels[index], likes_count: data.likes_count };
           return newReels;
         });
+        setLocalLiked(prev => ({ ...prev, [reelId]: data.status === "liked" }));
+      } else {
+        throw new Error("Failed to like on server");
       }
     } catch (err) {
       console.error(err);
       // Revert optimism if failed
       setReels(prevReels => {
         const newReels = [...prevReels];
+        const count = newReels[index].likes_count || 0;
         newReels[index] = { 
           ...newReels[index], 
-          likes_count: Math.max(0, (newReels[index].likes_count || 0) - 1) 
+          likes_count: willLike ? Math.max(0, count - 1) : count + 1 
         };
         return newReels;
       });
       setLocalLiked(prev => {
-        const next = { ...prev };
-        delete next[reelId];
+        const next = { ...prev, [reelId]: !willLike };
         localStorage.setItem("jobzmitra_liked_reels", JSON.stringify(next));
         return next;
       });
@@ -170,7 +174,7 @@ export default function ReelsPage() {
     setShowComments(reelId);
     setComments([]); // clear old comments
     try {
-      const res = await fetch(`http://localhost:8000/api/reels/${reelId}/comments`);
+      const res = await fetch(`/api/reels/${reelId}/comments`);
       if (res.ok) {
         const data = await res.json();
         setComments(data);
@@ -185,7 +189,7 @@ export default function ReelsPage() {
     if (!newComment.trim() || showComments === null) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8000/api/reels/${showComments}/comments`, {
+      const res = await fetch(`/api/reels/${showComments}/comments`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -228,7 +232,7 @@ export default function ReelsPage() {
       // 1. Upload video
       const formData = new FormData();
       formData.append("file", file);
-      const uploadRes = await fetch("http://localhost:8000/api/upload/", {
+      const uploadRes = await fetch("/api/upload", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -245,7 +249,7 @@ export default function ReelsPage() {
         : data.url;
       
       // 2. Create reel
-      const createRes = await fetch("http://localhost:8000/api/reels/", {
+      const createRes = await fetch("/api/reels", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

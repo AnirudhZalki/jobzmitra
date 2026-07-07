@@ -36,7 +36,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
-@router.get("/", response_model=List[PostOut])
+@router.get("", response_model=List[PostOut])
 def get_feed(db: Session = Depends(get_db), current_user: User = Depends(get_current_user), skip: int = 0, limit: int = 20):
     posts = db.query(Post).order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
     

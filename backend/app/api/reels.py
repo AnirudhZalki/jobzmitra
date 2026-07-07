@@ -39,7 +39,7 @@ class CommentOut(BaseModel):
     class Config:
         from_attributes = True
 
-@router.get("/", response_model=List[ReelOut])
+@router.get("", response_model=List[ReelOut])
 def get_reels(db: Session = Depends(get_db)):
     return db.query(Reel).order_by(desc(Reel.created_at)).all()
 
@@ -50,7 +50,7 @@ def get_reel(reel_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Reel not found")
     return reel
 
-@router.post("/", response_model=ReelOut)
+@router.post("", response_model=ReelOut)
 def create_reel(reel: ReelBase, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     new_reel = Reel(
         user_id=current_user.id,
@@ -71,14 +71,25 @@ def like_reel(reel_id: int, db: Session = Depends(get_db), current_user: User = 
     # Check if user already liked this reel
     existing = db.execute(
         reel_likes.select().where(
-            reel_likes.c.user_id == current_user.id,
-            reel_likes.c.reel_id == reel_id
+            and_(
+                reel_likes.c.user_id == current_user.id,
+                reel_likes.c.reel_id == reel_id
+            )
         )
     ).first()
     
     if existing:
-        # Already liked, do nothing
-        status = "liked"
+        # Already liked, unlike
+        db.execute(
+            reel_likes.delete().where(
+                and_(
+                    reel_likes.c.user_id == current_user.id,
+                    reel_likes.c.reel_id == reel_id
+                )
+            )
+        )
+        reel.likes_count = max(0, (reel.likes_count or 0) - 1)
+        status = "unliked"
     else:
         # Like
         db.execute(reel_likes.insert().values(user_id=current_user.id, reel_id=reel_id))

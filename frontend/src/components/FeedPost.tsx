@@ -24,6 +24,7 @@ export type PostData = {
 export default function FeedPost({ post, onDelete }: { post: PostData, onDelete?: (id: number) => void }) {
   const [liked, setLiked] = useState(post.is_liked_by_user);
   const [likesCount, setLikesCount] = useState(post.like_count);
+  const [isLiking, setIsLiking] = useState(false);
 
   // Comments and Share State
   const [showComments, setShowComments] = useState(false);
@@ -61,20 +62,29 @@ export default function FeedPost({ post, onDelete }: { post: PostData, onDelete?
   };
 
   const handleLike = async () => {
+    if (isLiking) return;
+    setIsLiking(true);
+
+    const willLike = !liked;
+    
     // Optimistic UI update
-    setLiked(!liked);
-    setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
+    setLiked(willLike);
+    setLikesCount((prev) => (willLike ? prev + 1 : prev - 1));
 
     try {
       const token = localStorage.getItem("token");
-      await fetch(`/api/feed/${post.id}/like`, {
+      const res = await fetch(`/api/feed/${post.id}/like`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
+      if (!res.ok) {
+        throw new Error("Failed to toggle like on server");
+      }
       // Award gamification points for liking
-      if (!liked) {
+      if (willLike) {
         fetch("/api/gamification/award", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -84,8 +94,10 @@ export default function FeedPost({ post, onDelete }: { post: PostData, onDelete?
     } catch (error) {
       console.error("Failed to toggle like", error);
       // Revert on error
-      setLiked(liked);
-      setLikesCount((prev) => (liked ? prev + 1 : prev - 1));
+      setLiked(!willLike);
+      setLikesCount((prev) => (willLike ? prev - 1 : prev + 1));
+    } finally {
+      setIsLiking(false);
     }
   };
 

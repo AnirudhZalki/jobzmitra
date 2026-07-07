@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 declare global {
   interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
   }
 }
 
@@ -38,7 +38,7 @@ export default function MentorChat() {
   const isMockModeRef = useRef(false);
   const timeLeftRef = useRef(60);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     setVoiceSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition));
@@ -126,7 +126,7 @@ export default function MentorChat() {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
+    recognition.onresult = (e: any) => {
       let transcript = "";
       for (let i = 0; i < e.results.length; i++) {
         transcript += e.results[i][0].transcript;
@@ -134,11 +134,11 @@ export default function MentorChat() {
       mockAnswerRef.current = transcript;
       setMockAnswer(transcript);
     };
-    recognition.onerror = (e) => {
+    recognition.onerror = (e: any) => {
       console.error("Speech error", e.error);
       setIsListening(false);
     };
-    recognition.onend = () => {
+    recognition.onend = (e: any) => {
       // Auto-restart if still in mock mode (browser cuts off after ~60s)
       if (isMockModeRef.current && !isSubmittingRef.current) {
         recognition.start();

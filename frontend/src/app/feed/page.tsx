@@ -20,10 +20,13 @@ export default function FeedPage() {
   const fetchPosts = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/feed/", {
+      const res = await fetch("/api/feed", {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache"
+        },
+        cache: "no-store"
       });
       if (res.ok) {
         const data = await res.json();
